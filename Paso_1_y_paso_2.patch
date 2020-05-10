@@ -1,0 +1,1991 @@
+Index: src/GenerateLexer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/GenerateLexer.java	(date 1587052384000)
++++ src/GenerateLexer.java	(date 1587052384000)
+@@ -0,0 +1,19 @@
++import java.io.File;
++
++public class GenerateLexer {
++
++	public static final String path ="lcalc.flex";
++	
++	public static void main(String[] args) {
++		// TODO Auto-generated method stub
++
++		generarLexer(path);
++	}
++	
++	public static void generarLexer(String path){
++		File file = new File(path);
++		jflex.Main.generate(file);
++	}
++	
++
++}
+Index: src/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/Main.java	(date 1589001611679)
++++ src/Main.java	(date 1589001611679)
+@@ -0,0 +1,47 @@
++/*
++  This example comes from a short article series in the Linux 
++  Gazette by Richard A. Sevenich and Christopher Lopes, titled
++  "Compiler Construction Tools". The article series starts at
++
++  http://www.linuxgazette.com/issue39/sevenich.html
++
++  Small changes and updates to newest JFlex+Cup versions 
++  by Gerwin Klein
++*/
++
++/*
++  Commented By: Christopher Lopes
++  File Name: Main.java
++  To Create: 
++  After the scanner, lcalc.flex, and the parser, ycalc.cup, have been created.
++  > javac Main.java
++  
++  To Run: 
++  > java Main test.txt
++  where test.txt is an test input file for the calculator.
++*/
++   
++import java.io.*;
++   
++public class Main {
++  static public void main(String argv[]) {    
++    /* Start the parser */
++    try {
++    
++      FileReader fr = new FileReader("input.txt");
++      //parser p = new parser(new Lexer(new FileReader(argv[0])));
++      parser p = new parser(new Lexer(fr));
++      
++      
++     
++	Object result = p.parse().value;
++;
++	
++    } catch (Exception e) {
++      /* do cleanup here -- possibly rethrow e */
++      e.printStackTrace();
++    }
++  }
++}
++
++
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/vcs.xml	(date 1589126381297)
++++ .idea/vcs.xml	(date 1589126381297)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: src/GenerateParser.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/GenerateParser.java	(date 1587052384000)
++++ src/GenerateParser.java	(date 1587052384000)
+@@ -0,0 +1,30 @@
++import java.io.File;
++import java.io.IOException;
++
++import java_cup.internal_error;
++
++public class GenerateParser {
++
++	public static final String path ="ycalc.cup";
++	
++	public static void main(String[] args) {
++		// TODO Auto-generated method stub
++
++		try {
++			generarLexer(path);
++		} catch (Exception e) {
++			// TODO Auto-generated catch block
++			e.printStackTrace();
++		}
++	}
++	
++	public static void generarLexer(String path) throws internal_error, IOException, Exception{
++		File file = new File(path);
++		//jflex.Main.generate(file);
++		String st[] = new String[1];
++		st[0] = path;
++		java_cup.Main.main(st);
++	}
++	
++
++}
+Index: lcalc.flex
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- lcalc.flex	(date 1589000824297)
++++ lcalc.flex	(date 1589000824297)
+@@ -0,0 +1,51 @@
++
++   
++import java_cup.runtime.*;
++      
++%%
++%class Lexer
++
++%line
++%column
++%cup
++   
++
++%{   
++    
++    private Symbol symbol(int type) {
++        return new Symbol(type, yyline, yycolumn);
++    }
++    
++    private Symbol symbol(int type, Object value) {	  
++    	return new Symbol(type, yyline, yycolumn, value);
++    }
++    
++%}
++   
++LineTerminator = \r|\n|\r\n
++WhiteSpace     = {LineTerminator} | [ \t\f]
++entero = 0 | [1-9][0-9]*
++decimal = 0 | [1-9][0-9]*("."[1-9][0-9]*)?
++letra = [A-Za-z]
++digito= [0-9]
++ 
++%%  
++   /* YYINITIAL is the state */
++   
++<YYINITIAL> {
++   
++   ";"                { return symbol(sym.SEMI); }
++    "+"                {  return symbol(sym.PLUS); }
++    "-"                {  return symbol(sym.MINUS); }
++    "*"                {  return symbol(sym.TIMES); }
++    "/"                {  return symbol(sym.DIVIDE); }
++    "("                {  return symbol(sym.LPAREN); }
++    ")"                {  return symbol(sym.RPAREN); }
++   
++    {entero}      { return symbol(sym.NUMBER, new Integer(yytext())); }
++
++   
++    {WhiteSpace}       { /* do nothing */ }   
++}
++
++[^]                    { throw new Error("Illegal character <"+yytext()+">"); }
+Index: input.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- input.txt	(date 1588992946199)
++++ input.txt	(date 1588992946199)
+@@ -0,0 +1,5 @@
++23+51-3*4;
++2*(4+3)*2;
++8/2+(2*2*2*(4-3));
++56+1;
++(23+51-3*4)+(8/2+(2*2*2*(4-3)));
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/misc.xml	(date 1588988387155)
++++ .idea/misc.xml	(date 1588988387155)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
++    <output url="file://$PROJECT_DIR$/out" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/dbnavigator.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/dbnavigator.xml	(date 1588988384646)
++++ .idea/dbnavigator.xml	(date 1588988384646)
+@@ -0,0 +1,464 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="DBNavigator.Project.DataEditorManager">
++    <record-view-column-sorting-type value="BY_INDEX" />
++    <value-preview-text-wrapping value="true" />
++    <value-preview-pinned value="false" />
++  </component>
++  <component name="DBNavigator.Project.DataExportManager">
++    <export-instructions>
++      <create-header value="true" />
++      <quote-values-containing-separator value="true" />
++      <quote-all-values value="false" />
++      <value-separator value="" />
++      <file-name value="" />
++      <file-location value="" />
++      <scope value="GLOBAL" />
++      <destination value="FILE" />
++      <format value="EXCEL" />
++      <charset value="windows-1252" />
++    </export-instructions>
++  </component>
++  <component name="DBNavigator.Project.DatabaseBrowserManager">
++    <autoscroll-to-editor value="false" />
++    <autoscroll-from-editor value="true" />
++    <show-object-properties value="true" />
++    <loaded-nodes />
++  </component>
++  <component name="DBNavigator.Project.EditorStateManager">
++    <last-used-providers />
++  </component>
++  <component name="DBNavigator.Project.MethodExecutionManager">
++    <method-browser />
++    <execution-history>
++      <group-entries value="true" />
++      <execution-inputs />
++    </execution-history>
++    <argument-values-cache />
++  </component>
++  <component name="DBNavigator.Project.ObjectDependencyManager">
++    <last-used-dependency-type value="INCOMING" />
++  </component>
++  <component name="DBNavigator.Project.ObjectQuickFilterManager">
++    <last-used-operator value="EQUAL" />
++    <filters />
++  </component>
++  <component name="DBNavigator.Project.ScriptExecutionManager" clear-outputs="true">
++    <recently-used-interfaces />
++  </component>
++  <component name="DBNavigator.Project.Settings">
++    <connections />
++    <browser-settings>
++      <general>
++        <display-mode value="TABBED" />
++        <navigation-history-size value="100" />
++        <show-object-details value="false" />
++      </general>
++      <filters>
++        <object-type-filter>
++          <object-type name="SCHEMA" enabled="true" />
++          <object-type name="USER" enabled="true" />
++          <object-type name="ROLE" enabled="true" />
++          <object-type name="PRIVILEGE" enabled="true" />
++          <object-type name="CHARSET" enabled="true" />
++          <object-type name="TABLE" enabled="true" />
++          <object-type name="VIEW" enabled="true" />
++          <object-type name="MATERIALIZED_VIEW" enabled="true" />
++          <object-type name="NESTED_TABLE" enabled="true" />
++          <object-type name="COLUMN" enabled="true" />
++          <object-type name="INDEX" enabled="true" />
++          <object-type name="CONSTRAINT" enabled="true" />
++          <object-type name="DATASET_TRIGGER" enabled="true" />
++          <object-type name="DATABASE_TRIGGER" enabled="true" />
++          <object-type name="SYNONYM" enabled="true" />
++          <object-type name="SEQUENCE" enabled="true" />
++          <object-type name="PROCEDURE" enabled="true" />
++          <object-type name="FUNCTION" enabled="true" />
++          <object-type name="PACKAGE" enabled="true" />
++          <object-type name="TYPE" enabled="true" />
++          <object-type name="TYPE_ATTRIBUTE" enabled="true" />
++          <object-type name="ARGUMENT" enabled="true" />
++          <object-type name="DIMENSION" enabled="true" />
++          <object-type name="CLUSTER" enabled="true" />
++          <object-type name="DBLINK" enabled="true" />
++        </object-type-filter>
++      </filters>
++      <sorting>
++        <object-type name="COLUMN" sorting-type="NAME" />
++        <object-type name="FUNCTION" sorting-type="NAME" />
++        <object-type name="PROCEDURE" sorting-type="NAME" />
++        <object-type name="ARGUMENT" sorting-type="POSITION" />
++      </sorting>
++      <default-editors>
++        <object-type name="VIEW" editor-type="SELECTION" />
++        <object-type name="PACKAGE" editor-type="SELECTION" />
++        <object-type name="TYPE" editor-type="SELECTION" />
++      </default-editors>
++    </browser-settings>
++    <navigation-settings>
++      <lookup-filters>
++        <lookup-objects>
++          <object-type name="SCHEMA" enabled="true" />
++          <object-type name="USER" enabled="false" />
++          <object-type name="ROLE" enabled="false" />
++          <object-type name="PRIVILEGE" enabled="false" />
++          <object-type name="CHARSET" enabled="false" />
++          <object-type name="TABLE" enabled="true" />
++          <object-type name="VIEW" enabled="true" />
++          <object-type name="MATERIALIZED VIEW" enabled="true" />
++          <object-type name="NESTED TABLE" enabled="false" />
++          <object-type name="COLUMN" enabled="false" />
++          <object-type name="INDEX" enabled="true" />
++          <object-type name="CONSTRAINT" enabled="true" />
++          <object-type name="DATASET TRIGGER" enabled="true" />
++          <object-type name="DATABASE TRIGGER" enabled="true" />
++          <object-type name="SYNONYM" enabled="false" />
++          <object-type name="SEQUENCE" enabled="true" />
++          <object-type name="PROCEDURE" enabled="true" />
++          <object-type name="FUNCTION" enabled="true" />
++          <object-type name="PACKAGE" enabled="true" />
++          <object-type name="TYPE" enabled="true" />
++          <object-type name="TYPE ATTRIBUTE" enabled="false" />
++          <object-type name="ARGUMENT" enabled="false" />
++          <object-type name="DIMENSION" enabled="false" />
++          <object-type name="CLUSTER" enabled="false" />
++          <object-type name="DBLINK" enabled="true" />
++        </lookup-objects>
++        <force-database-load value="false" />
++        <prompt-connection-selection value="true" />
++        <prompt-schema-selection value="true" />
++      </lookup-filters>
++    </navigation-settings>
++    <dataset-grid-settings>
++      <general>
++        <enable-zooming value="true" />
++        <enable-column-tooltip value="true" />
++      </general>
++      <sorting>
++        <nulls-first value="true" />
++        <max-sorting-columns value="4" />
++      </sorting>
++      <tracking-columns>
++        <columnNames value="" />
++        <visible value="true" />
++        <editable value="false" />
++      </tracking-columns>
++    </dataset-grid-settings>
++    <dataset-editor-settings>
++      <text-editor-popup>
++        <active value="false" />
++        <active-if-empty value="false" />
++        <data-length-threshold value="100" />
++        <popup-delay value="1000" />
++      </text-editor-popup>
++      <values-list-popup>
++        <show-popup-button value="true" />
++        <element-count-threshold value="1000" />
++        <data-length-threshold value="250" />
++      </values-list-popup>
++      <general>
++        <fetch-block-size value="100" />
++        <fetch-timeout value="30" />
++        <trim-whitespaces value="true" />
++        <convert-empty-strings-to-null value="true" />
++        <select-content-on-cell-edit value="true" />
++        <large-value-preview-active value="true" />
++      </general>
++      <filters>
++        <prompt-filter-dialog value="true" />
++        <default-filter-type value="BASIC" />
++      </filters>
++      <qualified-text-editor text-length-threshold="300">
++        <content-types>
++          <content-type name="Text" enabled="true" />
++          <content-type name="Properties" enabled="true" />
++          <content-type name="XML" enabled="true" />
++          <content-type name="DTD" enabled="true" />
++          <content-type name="HTML" enabled="true" />
++          <content-type name="XHTML" enabled="true" />
++          <content-type name="CSS" enabled="true" />
++          <content-type name="Java" enabled="true" />
++          <content-type name="SQL" enabled="true" />
++          <content-type name="PL/SQL" enabled="true" />
++          <content-type name="JPA QL" enabled="true" />
++          <content-type name="JavaScript" enabled="true" />
++          <content-type name="JSP" enabled="true" />
++          <content-type name="JSPx" enabled="true" />
++          <content-type name="Groovy" enabled="true" />
++          <content-type name="FTL" enabled="true" />
++          <content-type name="TML" enabled="true" />
++          <content-type name="GSP" enabled="true" />
++          <content-type name="ASP" enabled="true" />
++          <content-type name="VTL" enabled="true" />
++          <content-type name="AIDL" enabled="true" />
++          <content-type name="YAML" enabled="true" />
++          <content-type name="Flex" enabled="true" />
++          <content-type name="Manifest" enabled="true" />
++        </content-types>
++      </qualified-text-editor>
++      <record-navigation>
++        <navigation-target value="VIEWER" />
++      </record-navigation>
++    </dataset-editor-settings>
++    <code-editor-settings>
++      <general>
++        <show-object-navigation-gutter value="false" />
++        <show-spec-declaration-navigation-gutter value="true" />
++        <enable-spellchecking value="true" />
++        <enable-reference-spellchecking value="false" />
++      </general>
++      <confirmations>
++        <save-changes value="false" />
++        <revert-changes value="true" />
++      </confirmations>
++    </code-editor-settings>
++    <code-completion-settings>
++      <filters>
++        <basic-filter>
++          <filter-element type="RESERVED_WORD" id="keyword" selected="true" />
++          <filter-element type="RESERVED_WORD" id="function" selected="true" />
++          <filter-element type="RESERVED_WORD" id="parameter" selected="true" />
++          <filter-element type="RESERVED_WORD" id="datatype" selected="true" />
++          <filter-element type="RESERVED_WORD" id="exception" selected="true" />
++          <filter-element type="OBJECT" id="schema" selected="true" />
++          <filter-element type="OBJECT" id="role" selected="true" />
++          <filter-element type="OBJECT" id="user" selected="true" />
++          <filter-element type="OBJECT" id="privilege" selected="true" />
++          <user-schema>
++            <filter-element type="OBJECT" id="table" selected="true" />
++            <filter-element type="OBJECT" id="view" selected="true" />
++            <filter-element type="OBJECT" id="materialized view" selected="true" />
++            <filter-element type="OBJECT" id="index" selected="true" />
++            <filter-element type="OBJECT" id="constraint" selected="true" />
++            <filter-element type="OBJECT" id="trigger" selected="true" />
++            <filter-element type="OBJECT" id="synonym" selected="false" />
++            <filter-element type="OBJECT" id="sequence" selected="true" />
++            <filter-element type="OBJECT" id="procedure" selected="true" />
++            <filter-element type="OBJECT" id="function" selected="true" />
++            <filter-element type="OBJECT" id="package" selected="true" />
++            <filter-element type="OBJECT" id="type" selected="true" />
++            <filter-element type="OBJECT" id="dimension" selected="true" />
++            <filter-element type="OBJECT" id="cluster" selected="true" />
++            <filter-element type="OBJECT" id="dblink" selected="true" />
++          </user-schema>
++          <public-schema>
++            <filter-element type="OBJECT" id="table" selected="false" />
++            <filter-element type="OBJECT" id="view" selected="false" />
++            <filter-element type="OBJECT" id="materialized view" selected="false" />
++            <filter-element type="OBJECT" id="index" selected="false" />
++            <filter-element type="OBJECT" id="constraint" selected="false" />
++            <filter-element type="OBJECT" id="trigger" selected="false" />
++            <filter-element type="OBJECT" id="synonym" selected="false" />
++            <filter-element type="OBJECT" id="sequence" selected="false" />
++            <filter-element type="OBJECT" id="procedure" selected="false" />
++            <filter-element type="OBJECT" id="function" selected="false" />
++            <filter-element type="OBJECT" id="package" selected="false" />
++            <filter-element type="OBJECT" id="type" selected="false" />
++            <filter-element type="OBJECT" id="dimension" selected="false" />
++            <filter-element type="OBJECT" id="cluster" selected="false" />
++            <filter-element type="OBJECT" id="dblink" selected="false" />
++          </public-schema>
++          <any-schema>
++            <filter-element type="OBJECT" id="table" selected="true" />
++            <filter-element type="OBJECT" id="view" selected="true" />
++            <filter-element type="OBJECT" id="materialized view" selected="true" />
++            <filter-element type="OBJECT" id="index" selected="true" />
++            <filter-element type="OBJECT" id="constraint" selected="true" />
++            <filter-element type="OBJECT" id="trigger" selected="true" />
++            <filter-element type="OBJECT" id="synonym" selected="true" />
++            <filter-element type="OBJECT" id="sequence" selected="true" />
++            <filter-element type="OBJECT" id="procedure" selected="true" />
++            <filter-element type="OBJECT" id="function" selected="true" />
++            <filter-element type="OBJECT" id="package" selected="true" />
++            <filter-element type="OBJECT" id="type" selected="true" />
++            <filter-element type="OBJECT" id="dimension" selected="true" />
++            <filter-element type="OBJECT" id="cluster" selected="true" />
++            <filter-element type="OBJECT" id="dblink" selected="true" />
++          </any-schema>
++        </basic-filter>
++        <extended-filter>
++          <filter-element type="RESERVED_WORD" id="keyword" selected="true" />
++          <filter-element type="RESERVED_WORD" id="function" selected="true" />
++          <filter-element type="RESERVED_WORD" id="parameter" selected="true" />
++          <filter-element type="RESERVED_WORD" id="datatype" selected="true" />
++          <filter-element type="RESERVED_WORD" id="exception" selected="true" />
++          <filter-element type="OBJECT" id="schema" selected="true" />
++          <filter-element type="OBJECT" id="user" selected="true" />
++          <filter-element type="OBJECT" id="role" selected="true" />
++          <filter-element type="OBJECT" id="privilege" selected="true" />
++          <user-schema>
++            <filter-element type="OBJECT" id="table" selected="true" />
++            <filter-element type="OBJECT" id="view" selected="true" />
++            <filter-element type="OBJECT" id="materialized view" selected="true" />
++            <filter-element type="OBJECT" id="index" selected="true" />
++            <filter-element type="OBJECT" id="constraint" selected="true" />
++            <filter-element type="OBJECT" id="trigger" selected="true" />
++            <filter-element type="OBJECT" id="synonym" selected="true" />
++            <filter-element type="OBJECT" id="sequence" selected="true" />
++            <filter-element type="OBJECT" id="procedure" selected="true" />
++            <filter-element type="OBJECT" id="function" selected="true" />
++            <filter-element type="OBJECT" id="package" selected="true" />
++            <filter-element type="OBJECT" id="type" selected="true" />
++            <filter-element type="OBJECT" id="dimension" selected="true" />
++            <filter-element type="OBJECT" id="cluster" selected="true" />
++            <filter-element type="OBJECT" id="dblink" selected="true" />
++          </user-schema>
++          <public-schema>
++            <filter-element type="OBJECT" id="table" selected="true" />
++            <filter-element type="OBJECT" id="view" selected="true" />
++            <filter-element type="OBJECT" id="materialized view" selected="true" />
++            <filter-element type="OBJECT" id="index" selected="true" />
++            <filter-element type="OBJECT" id="constraint" selected="true" />
++            <filter-element type="OBJECT" id="trigger" selected="true" />
++            <filter-element type="OBJECT" id="synonym" selected="true" />
++            <filter-element type="OBJECT" id="sequence" selected="true" />
++            <filter-element type="OBJECT" id="procedure" selected="true" />
++            <filter-element type="OBJECT" id="function" selected="true" />
++            <filter-element type="OBJECT" id="package" selected="true" />
++            <filter-element type="OBJECT" id="type" selected="true" />
++            <filter-element type="OBJECT" id="dimension" selected="true" />
++            <filter-element type="OBJECT" id="cluster" selected="true" />
++            <filter-element type="OBJECT" id="dblink" selected="true" />
++          </public-schema>
++          <any-schema>
++            <filter-element type="OBJECT" id="table" selected="true" />
++            <filter-element type="OBJECT" id="view" selected="true" />
++            <filter-element type="OBJECT" id="materialized view" selected="true" />
++            <filter-element type="OBJECT" id="index" selected="true" />
++            <filter-element type="OBJECT" id="constraint" selected="true" />
++            <filter-element type="OBJECT" id="trigger" selected="true" />
++            <filter-element type="OBJECT" id="synonym" selected="true" />
++            <filter-element type="OBJECT" id="sequence" selected="true" />
++            <filter-element type="OBJECT" id="procedure" selected="true" />
++            <filter-element type="OBJECT" id="function" selected="true" />
++            <filter-element type="OBJECT" id="package" selected="true" />
++            <filter-element type="OBJECT" id="type" selected="true" />
++            <filter-element type="OBJECT" id="dimension" selected="true" />
++            <filter-element type="OBJECT" id="cluster" selected="true" />
++            <filter-element type="OBJECT" id="dblink" selected="true" />
++          </any-schema>
++        </extended-filter>
++      </filters>
++      <sorting enabled="true">
++        <sorting-element type="RESERVED_WORD" id="keyword" />
++        <sorting-element type="RESERVED_WORD" id="datatype" />
++        <sorting-element type="OBJECT" id="column" />
++        <sorting-element type="OBJECT" id="table" />
++        <sorting-element type="OBJECT" id="view" />
++        <sorting-element type="OBJECT" id="materialized view" />
++        <sorting-element type="OBJECT" id="index" />
++        <sorting-element type="OBJECT" id="constraint" />
++        <sorting-element type="OBJECT" id="trigger" />
++        <sorting-element type="OBJECT" id="synonym" />
++        <sorting-element type="OBJECT" id="sequence" />
++        <sorting-element type="OBJECT" id="procedure" />
++        <sorting-element type="OBJECT" id="function" />
++        <sorting-element type="OBJECT" id="package" />
++        <sorting-element type="OBJECT" id="type" />
++        <sorting-element type="OBJECT" id="dimension" />
++        <sorting-element type="OBJECT" id="cluster" />
++        <sorting-element type="OBJECT" id="dblink" />
++        <sorting-element type="OBJECT" id="schema" />
++        <sorting-element type="OBJECT" id="role" />
++        <sorting-element type="OBJECT" id="user" />
++        <sorting-element type="RESERVED_WORD" id="function" />
++        <sorting-element type="RESERVED_WORD" id="parameter" />
++      </sorting>
++      <format>
++        <enforce-code-style-case value="true" />
++      </format>
++    </code-completion-settings>
++    <execution-engine-settings>
++      <statement-execution>
++        <fetch-block-size value="100" />
++        <execution-timeout value="20" />
++        <debug-execution-timeout value="600" />
++        <focus-result value="false" />
++        <prompt-execution value="false" />
++      </statement-execution>
++      <script-execution>
++        <command-line-interfaces />
++        <execution-timeout value="300" />
++      </script-execution>
++      <method-execution>
++        <execution-timeout value="30" />
++        <debug-execution-timeout value="600" />
++        <parameter-history-size value="10" />
++      </method-execution>
++    </execution-engine-settings>
++    <operation-settings>
++      <transactions>
++        <uncommitted-changes>
++          <on-project-close value="ASK" />
++          <on-disconnect value="ASK" />
++          <on-autocommit-toggle value="ASK" />
++        </uncommitted-changes>
++        <multiple-uncommitted-changes>
++          <on-commit value="ASK" />
++          <on-rollback value="ASK" />
++        </multiple-uncommitted-changes>
++      </transactions>
++      <session-browser>
++        <disconnect-session value="ASK" />
++        <kill-session value="ASK" />
++        <reload-on-filter-change value="false" />
++      </session-browser>
++      <compiler>
++        <compile-type value="KEEP" />
++        <compile-dependencies value="ASK" />
++        <always-show-controls value="false" />
++      </compiler>
++      <debugger>
++        <debugger-type value="ASK" />
++        <use-generic-runners value="true" />
++      </debugger>
++    </operation-settings>
++    <ddl-file-settings>
++      <extensions>
++        <mapping file-type-id="VIEW" extensions="vw" />
++        <mapping file-type-id="TRIGGER" extensions="trg" />
++        <mapping file-type-id="PROCEDURE" extensions="prc" />
++        <mapping file-type-id="FUNCTION" extensions="fnc" />
++        <mapping file-type-id="PACKAGE" extensions="pkg" />
++        <mapping file-type-id="PACKAGE_SPEC" extensions="pks" />
++        <mapping file-type-id="PACKAGE_BODY" extensions="pkb" />
++        <mapping file-type-id="TYPE" extensions="tpe" />
++        <mapping file-type-id="TYPE_SPEC" extensions="tps" />
++        <mapping file-type-id="TYPE_BODY" extensions="tpb" />
++      </extensions>
++      <general>
++        <lookup-ddl-files value="true" />
++        <create-ddl-files value="false" />
++        <synchronize-ddl-files value="true" />
++        <use-qualified-names value="false" />
++        <make-scripts-rerunnable value="true" />
++      </general>
++    </ddl-file-settings>
++    <general-settings>
++      <regional-settings>
++        <date-format value="MEDIUM" />
++        <number-format value="UNGROUPED" />
++        <locale value="SYSTEM_DEFAULT" />
++        <use-custom-formats value="false" />
++      </regional-settings>
++      <environment>
++        <environment-types>
++          <environment-type id="development" name="Development" description="Development environment" color="-2430209/-12296320" readonly-code="false" readonly-data="false" />
++          <environment-type id="integration" name="Integration" description="Integration environment" color="-2621494/-12163514" readonly-code="true" readonly-data="false" />
++          <environment-type id="production" name="Production" description="Productive environment" color="-11574/-10271420" readonly-code="true" readonly-data="true" />
++          <environment-type id="other" name="Other" description="" color="-1576/-10724543" readonly-code="false" readonly-data="false" />
++        </environment-types>
++        <visibility-settings>
++          <connection-tabs value="true" />
++          <dialog-headers value="true" />
++          <object-editor-tabs value="true" />
++          <script-editor-tabs value="false" />
++          <execution-result-tabs value="true" />
++        </visibility-settings>
++      </environment>
++    </general-settings>
++  </component>
++  <component name="DBNavigator.Project.StatementExecutionManager">
++    <execution-variables />
++  </component>
++</project>
+\ No newline at end of file
+Index: PracticaCUP.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- PracticaCUP.iml	(date 1588988957863)
++++ PracticaCUP.iml	(date 1588988957863)
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="JAVA_MODULE" version="4">
++  <component name="NewModuleRootManager" inherit-compiler-output="true">
++    <exclude-output />
++    <content url="file://$MODULE_DIR$">
++      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
++    </content>
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++    <orderEntry type="library" name="jflex-1.5.0" level="project" />
++  </component>
++</module>
+\ No newline at end of file
+Index: .idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/modules.xml	(date 1588988387594)
++++ .idea/modules.xml	(date 1588988387594)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/PracticaCUP.iml" filepath="$PROJECT_DIR$/PracticaCUP.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/codeStyles/Project.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/codeStyles/Project.xml	(date 1589124186261)
++++ .idea/codeStyles/Project.xml	(date 1589124186261)
+@@ -0,0 +1,52 @@
++<component name="ProjectCodeStyleConfiguration">
++  <code_scheme name="Project" version="173">
++    <DBN-PSQL>
++      <case-options enabled="false">
++        <option name="KEYWORD_CASE" value="lower" />
++        <option name="FUNCTION_CASE" value="lower" />
++        <option name="PARAMETER_CASE" value="lower" />
++        <option name="DATATYPE_CASE" value="lower" />
++        <option name="OBJECT_CASE" value="preserve" />
++      </case-options>
++      <formatting-settings enabled="false" />
++    </DBN-PSQL>
++    <DBN-SQL>
++      <case-options enabled="false">
++        <option name="KEYWORD_CASE" value="lower" />
++        <option name="FUNCTION_CASE" value="lower" />
++        <option name="PARAMETER_CASE" value="lower" />
++        <option name="DATATYPE_CASE" value="lower" />
++        <option name="OBJECT_CASE" value="preserve" />
++      </case-options>
++      <formatting-settings enabled="false">
++        <option name="STATEMENT_SPACING" value="one_line" />
++        <option name="CLAUSE_CHOP_DOWN" value="chop_down_if_statement_long" />
++        <option name="ITERATION_ELEMENTS_WRAPPING" value="chop_down_if_not_single" />
++      </formatting-settings>
++    </DBN-SQL>
++    <DBN-PSQL>
++      <case-options enabled="false">
++        <option name="KEYWORD_CASE" value="lower" />
++        <option name="FUNCTION_CASE" value="lower" />
++        <option name="PARAMETER_CASE" value="lower" />
++        <option name="DATATYPE_CASE" value="lower" />
++        <option name="OBJECT_CASE" value="preserve" />
++      </case-options>
++      <formatting-settings enabled="false" />
++    </DBN-PSQL>
++    <DBN-SQL>
++      <case-options enabled="false">
++        <option name="KEYWORD_CASE" value="lower" />
++        <option name="FUNCTION_CASE" value="lower" />
++        <option name="PARAMETER_CASE" value="lower" />
++        <option name="DATATYPE_CASE" value="lower" />
++        <option name="OBJECT_CASE" value="preserve" />
++      </case-options>
++      <formatting-settings enabled="false">
++        <option name="STATEMENT_SPACING" value="one_line" />
++        <option name="CLAUSE_CHOP_DOWN" value="chop_down_if_statement_long" />
++        <option name="ITERATION_ELEMENTS_WRAPPING" value="chop_down_if_not_single" />
++      </formatting-settings>
++    </DBN-SQL>
++  </code_scheme>
++</component>
+\ No newline at end of file
+Index: ycalc.cup
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- ycalc.cup	(date 1589001478953)
++++ ycalc.cup	(date 1589001478953)
+@@ -0,0 +1,116 @@
++
++import java_cup.runtime.*;
++   
++action code {:
++
++ public String x = "" ; 
++ 
++:}
++parser code {:
++
++   
++    
++    
++    public void report_error(String message, Object info) {
++   
++        StringBuilder m = new StringBuilder("Error");
++   
++         if (info instanceof java_cup.runtime.Symbol) {
++            
++            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
++   
++             if (s.left >= 0) {                
++                  m.append(" in line "+(s.left+1));   
++               	 
++               	  if (s.right >= 0)                    
++                 	 m.append(", column "+(s.right+1));
++            }
++        }
++   
++        m.append(" : "+message);
++   
++        System.err.println(m);
++    }
++   
++    
++    public void report_fatal_error(String message, Object info) {
++        report_error(message, info);
++        System.exit(1);
++    }
++:};
++   
++
++   
++/* ------------Declaration of Terminals and Non Terminals Section----------- */
++   
++
++terminal           SEMI, PLUS, MINUS, TIMES, DIVIDE, LPAREN, RPAREN;
++terminal Integer   NUMBER;
++   
++non terminal Object     expr_list, expr_part;
++non terminal Integer    expr, factor, term;
++  
++
++/* -------------Precedence and Associatively of Terminals Section----------- */
++      
++  precedence left PLUS, MINUS; 
++  precedence left TIMES, DIVIDE; 
++
++/* ----------------------------Grammar Section-------------------- */
++   
++/*----------------------------------------------   
++   expr_list ::=   expr_list expr_part
++                 | expr_part 
++              
++   expr_part ::=   expr SEMI
++   expr      ::=   expr PLUS factor
++                 | expr MINUS factor
++                 | factor
++   factor    ::=   factor TIMES term
++                 | factor DIVIDE term
++                 | term
++   term     ::=    LPAREN expr RPAREN
++                 | NUMBER
++                 | ID             
++                 
++----------------------------------------------------*/
++   
++   expr_list ::= expr_list expr_part
++                 |
++                 expr_part
++                 ;
++               
++   expr_part ::= expr:e
++                 {:   System.out.println(x +" = " + e); x=""; :}
++                 SEMI
++                 ;
++
++   
++   expr      ::= expr:e PLUS factor:f
++                 {: x+= "+ ";RESULT = new Integer(e.intValue() + f.intValue());:}
++                 |
++                 expr:e MINUS factor:f
++                 {:  x+= "- ";RESULT = new Integer(e.intValue() - f.intValue()); :}
++                 |
++                 factor:f
++                 {: RESULT = new Integer(f.intValue()); :}
++                 ;
++   
++  factor    ::= factor:f TIMES term:t
++                 {: x+= "* "; RESULT = new Integer(f.intValue() * t.intValue()); :}
++                 |
++                 factor:f DIVIDE term:t
++                 {: x+= "/ "; RESULT = new Integer(f.intValue() / t.intValue()); :}
++                 |
++                 term:t
++                 {: RESULT = new Integer(t.intValue()); :}
++                 ;
++   
++  term      ::= LPAREN expr:e RPAREN
++                 {: RESULT = e;  :}
++                 |
++                 NUMBER:n
++                 {: x+= n+" "; RESULT = n; :}
++                 ;
++                 
++  
+Index: .idea/libraries/jflex_1_5_0.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/libraries/jflex_1_5_0.xml	(date 1588988957978)
++++ .idea/libraries/jflex_1_5_0.xml	(date 1588988957978)
+@@ -0,0 +1,10 @@
++<component name="libraryTable">
++  <library name="jflex-1.5.0">
++    <CLASSES>
++      <root url="jar://$PROJECT_DIR$/../practica2/jflex-1.5.0.jar!/" />
++      <root url="jar://$PROJECT_DIR$/../practica2/java-cup-11a.jar!/" />
++    </CLASSES>
++    <JAVADOC />
++    <SOURCES />
++  </library>
++</component>
+\ No newline at end of file
+Index: src/Lexer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/Lexer.java	(date 1589001586266)
++++ src/Lexer.java	(date 1589001586266)
+@@ -0,0 +1,659 @@
++/* The following code was generated by JFlex 1.5.0-SNAPSHOT */
++
++
++   
++import java_cup.runtime.*;
++      
++
++/**
++ * This class is a scanner generated by 
++ * <a href="http://www.jflex.de/">JFlex</a> 1.5.0-SNAPSHOT
++ * from the specification file <tt>lcalc.flex</tt>
++ */
++class Lexer implements java_cup.runtime.Scanner {
++
++  /** This character denotes the end of file */
++  public static final int YYEOF = -1;
++
++  /** initial size of the lookahead buffer */
++  private static final int ZZ_BUFFERSIZE = 16384;
++
++  /** lexical states */
++  public static final int YYINITIAL = 0;
++
++  /**
++   * ZZ_LEXSTATE[l] is the state in the DFA for the lexical state l
++   * ZZ_LEXSTATE[l+1] is the state in the DFA for the lexical state l
++   *                  at the beginning of a line
++   * l is of the form l = 2*k, k a non negative integer
++   */
++  private static final int ZZ_LEXSTATE[] = { 
++     0, 0
++  };
++
++  /** 
++   * Translates characters to character classes
++   */
++  private static final String ZZ_CMAP_PACKED = 
++    "\11\0\1\3\1\2\1\0\1\3\1\1\22\0\1\3\7\0\1\13"+
++    "\1\14\1\11\1\7\1\0\1\10\1\0\1\12\1\4\11\5\1\0"+
++    "\1\6\5\0\32\0\6\0\32\0\uff85\0";
++
++  /** 
++   * Translates characters to character classes
++   */
++  private static final char [] ZZ_CMAP = zzUnpackCMap(ZZ_CMAP_PACKED);
++
++  /** 
++   * Translates DFA states to action switch labels.
++   */
++  private static final int [] ZZ_ACTION = zzUnpackAction();
++
++  private static final String ZZ_ACTION_PACKED_0 =
++    "\1\0\1\1\2\2\2\3\1\4\1\5\1\6\1\7"+
++    "\1\10\1\11\1\12";
++
++  private static int [] zzUnpackAction() {
++    int [] result = new int[13];
++    int offset = 0;
++    offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
++    return result;
++  }
++
++  private static int zzUnpackAction(String packed, int offset, int [] result) {
++    int i = 0;       /* index in packed string  */
++    int j = offset;  /* index in unpacked array */
++    int l = packed.length();
++    while (i < l) {
++      int count = packed.charAt(i++);
++      int value = packed.charAt(i++);
++      do result[j++] = value; while (--count > 0);
++    }
++    return j;
++  }
++
++
++  /** 
++   * Translates a state to a row index in the transition table
++   */
++  private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
++
++  private static final String ZZ_ROWMAP_PACKED_0 =
++    "\0\0\0\15\0\32\0\15\0\15\0\47\0\15\0\15"+
++    "\0\15\0\15\0\15\0\15\0\15";
++
++  private static int [] zzUnpackRowMap() {
++    int [] result = new int[13];
++    int offset = 0;
++    offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
++    return result;
++  }
++
++  private static int zzUnpackRowMap(String packed, int offset, int [] result) {
++    int i = 0;  /* index in packed string  */
++    int j = offset;  /* index in unpacked array */
++    int l = packed.length();
++    while (i < l) {
++      int high = packed.charAt(i++) << 16;
++      result[j++] = high | packed.charAt(i++);
++    }
++    return j;
++  }
++
++  /** 
++   * The transition table of the DFA
++   */
++  private static final int [] ZZ_TRANS = zzUnpackTrans();
++
++  private static final String ZZ_TRANS_PACKED_0 =
++    "\1\2\1\3\2\4\1\5\1\6\1\7\1\10\1\11"+
++    "\1\12\1\13\1\14\1\15\17\0\1\4\16\0\2\6"+
++    "\7\0";
++
++  private static int [] zzUnpackTrans() {
++    int [] result = new int[52];
++    int offset = 0;
++    offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
++    return result;
++  }
++
++  private static int zzUnpackTrans(String packed, int offset, int [] result) {
++    int i = 0;       /* index in packed string  */
++    int j = offset;  /* index in unpacked array */
++    int l = packed.length();
++    while (i < l) {
++      int count = packed.charAt(i++);
++      int value = packed.charAt(i++);
++      value--;
++      do result[j++] = value; while (--count > 0);
++    }
++    return j;
++  }
++
++
++  /* error codes */
++  private static final int ZZ_UNKNOWN_ERROR = 0;
++  private static final int ZZ_NO_MATCH = 1;
++  private static final int ZZ_PUSHBACK_2BIG = 2;
++
++  /* error messages for the codes above */
++  private static final String ZZ_ERROR_MSG[] = {
++    "Unkown internal scanner error",
++    "Error: could not match input",
++    "Error: pushback value was too large"
++  };
++
++  /**
++   * ZZ_ATTRIBUTE[aState] contains the attributes of state <code>aState</code>
++   */
++  private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
++
++  private static final String ZZ_ATTRIBUTE_PACKED_0 =
++    "\1\0\1\11\1\1\2\11\1\1\7\11";
++
++  private static int [] zzUnpackAttribute() {
++    int [] result = new int[13];
++    int offset = 0;
++    offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
++    return result;
++  }
++
++  private static int zzUnpackAttribute(String packed, int offset, int [] result) {
++    int i = 0;       /* index in packed string  */
++    int j = offset;  /* index in unpacked array */
++    int l = packed.length();
++    while (i < l) {
++      int count = packed.charAt(i++);
++      int value = packed.charAt(i++);
++      do result[j++] = value; while (--count > 0);
++    }
++    return j;
++  }
++
++  /** the input device */
++  private java.io.Reader zzReader;
++
++  /** the current state of the DFA */
++  private int zzState;
++
++  /** the current lexical state */
++  private int zzLexicalState = YYINITIAL;
++
++  /** this buffer contains the current text to be matched and is
++      the source of the yytext() string */
++  private char zzBuffer[] = new char[ZZ_BUFFERSIZE];
++
++  /** the textposition at the last accepting state */
++  private int zzMarkedPos;
++
++  /** the current text position in the buffer */
++  private int zzCurrentPos;
++
++  /** startRead marks the beginning of the yytext() string in the buffer */
++  private int zzStartRead;
++
++  /** endRead marks the last character in the buffer, that has been read
++      from input */
++  private int zzEndRead;
++
++  /** number of newlines encountered up to the start of the matched text */
++  private int yyline;
++
++  /** the number of characters up to the start of the matched text */
++  private int yychar;
++
++  /**
++   * the number of characters from the last newline up to the start of the 
++   * matched text
++   */
++  private int yycolumn;
++
++  /** 
++   * zzAtBOL == true <=> the scanner is currently at the beginning of a line
++   */
++  private boolean zzAtBOL = true;
++
++  /** zzAtEOF == true <=> the scanner is at the EOF */
++  private boolean zzAtEOF;
++
++  /** denotes if the user-EOF-code has already been executed */
++  private boolean zzEOFDone;
++
++  /* user code: */
++    
++    private Symbol symbol(int type) {
++        return new Symbol(type, yyline, yycolumn);
++    }
++    
++    private Symbol symbol(int type, Object value) {	  
++    	return new Symbol(type, yyline, yycolumn, value);
++    }
++    
++
++
++  /**
++   * Creates a new scanner
++   * There is also a java.io.InputStream version of this constructor.
++   *
++   * @param   in  the java.io.Reader to read input from.
++   */
++  Lexer(java.io.Reader in) {
++    this.zzReader = in;
++  }
++
++  /**
++   * Creates a new scanner.
++   * There is also java.io.Reader version of this constructor.
++   *
++   * @param   in  the java.io.Inputstream to read input from.
++   */
++  Lexer(java.io.InputStream in) {
++    this(new java.io.InputStreamReader
++             (in, java.nio.charset.Charset.forName("UTF-8")));
++  }
++
++  /** 
++   * Unpacks the compressed character translation table.
++   *
++   * @param packed   the packed character translation table
++   * @return         the unpacked character translation table
++   */
++  private static char [] zzUnpackCMap(String packed) {
++    char [] map = new char[0x10000];
++    int i = 0;  /* index in packed string  */
++    int j = 0;  /* index in unpacked array */
++    while (i < 52) {
++      int  count = packed.charAt(i++);
++      char value = packed.charAt(i++);
++      do map[j++] = value; while (--count > 0);
++    }
++    return map;
++  }
++
++
++  /**
++   * Refills the input buffer.
++   *
++   * @return      <code>false</code>, iff there was new input.
++   * 
++   * @exception   java.io.IOException  if any I/O-Error occurs
++   */
++  private boolean zzRefill() throws java.io.IOException {
++
++    /* first: make room (if you can) */
++    if (zzStartRead > 0) {
++      System.arraycopy(zzBuffer, zzStartRead,
++                       zzBuffer, 0,
++                       zzEndRead-zzStartRead);
++
++      /* translate stored positions */
++      zzEndRead-= zzStartRead;
++      zzCurrentPos-= zzStartRead;
++      zzMarkedPos-= zzStartRead;
++      zzStartRead = 0;
++    }
++
++    /* is the buffer big enough? */
++    if (zzCurrentPos >= zzBuffer.length) {
++      /* if not: blow it up */
++      char newBuffer[] = new char[zzCurrentPos*2];
++      System.arraycopy(zzBuffer, 0, newBuffer, 0, zzBuffer.length);
++      zzBuffer = newBuffer;
++    }
++
++    /* finally: fill the buffer with new input */
++    int numRead = zzReader.read(zzBuffer, zzEndRead,
++                                            zzBuffer.length-zzEndRead);
++
++    if (numRead > 0) {
++      zzEndRead+= numRead;
++      return false;
++    }
++    // unlikely but not impossible: read 0 characters, but not at end of stream    
++    if (numRead == 0) {
++      int c = zzReader.read();
++      if (c == -1) {
++        return true;
++      } else {
++        zzBuffer[zzEndRead++] = (char) c;
++        return false;
++      }     
++    }
++
++    // numRead < 0
++    return true;
++  }
++
++    
++  /**
++   * Closes the input stream.
++   */
++  public final void yyclose() throws java.io.IOException {
++    zzAtEOF = true;            /* indicate end of file */
++    zzEndRead = zzStartRead;  /* invalidate buffer    */
++
++    if (zzReader != null)
++      zzReader.close();
++  }
++
++
++  /**
++   * Resets the scanner to read from a new input stream.
++   * Does not close the old reader.
++   *
++   * All internal variables are reset, the old input stream 
++   * <b>cannot</b> be reused (internal buffer is discarded and lost).
++   * Lexical state is set to <tt>ZZ_INITIAL</tt>.
++   *
++   * Internal scan buffer is resized down to its initial length, if it has grown.
++   *
++   * @param reader   the new input stream 
++   */
++  public final void yyreset(java.io.Reader reader) {
++    zzReader = reader;
++    zzAtBOL  = true;
++    zzAtEOF  = false;
++    zzEOFDone = false;
++    zzEndRead = zzStartRead = 0;
++    zzCurrentPos = zzMarkedPos = 0;
++    yyline = yychar = yycolumn = 0;
++    zzLexicalState = YYINITIAL;
++    if (zzBuffer.length > ZZ_BUFFERSIZE)
++      zzBuffer = new char[ZZ_BUFFERSIZE];
++  }
++
++
++  /**
++   * Returns the current lexical state.
++   */
++  public final int yystate() {
++    return zzLexicalState;
++  }
++
++
++  /**
++   * Enters a new lexical state
++   *
++   * @param newState the new lexical state
++   */
++  public final void yybegin(int newState) {
++    zzLexicalState = newState;
++  }
++
++
++  /**
++   * Returns the text matched by the current regular expression.
++   */
++  public final String yytext() {
++    return new String( zzBuffer, zzStartRead, zzMarkedPos-zzStartRead );
++  }
++
++
++  /**
++   * Returns the character at position <tt>pos</tt> from the 
++   * matched text. 
++   * 
++   * It is equivalent to yytext().charAt(pos), but faster
++   *
++   * @param pos the position of the character to fetch. 
++   *            A value from 0 to yylength()-1.
++   *
++   * @return the character at position pos
++   */
++  public final char yycharat(int pos) {
++    return zzBuffer[zzStartRead+pos];
++  }
++
++
++  /**
++   * Returns the length of the matched text region.
++   */
++  public final int yylength() {
++    return zzMarkedPos-zzStartRead;
++  }
++
++
++  /**
++   * Reports an error that occured while scanning.
++   *
++   * In a wellformed scanner (no or only correct usage of 
++   * yypushback(int) and a match-all fallback rule) this method 
++   * will only be called with things that "Can't Possibly Happen".
++   * If this method is called, something is seriously wrong
++   * (e.g. a JFlex bug producing a faulty scanner etc.).
++   *
++   * Usual syntax/scanner level error handling should be done
++   * in error fallback rules.
++   *
++   * @param   errorCode  the code of the errormessage to display
++   */
++  private void zzScanError(int errorCode) {
++    String message;
++    try {
++      message = ZZ_ERROR_MSG[errorCode];
++    }
++    catch (ArrayIndexOutOfBoundsException e) {
++      message = ZZ_ERROR_MSG[ZZ_UNKNOWN_ERROR];
++    }
++
++    throw new Error(message);
++  } 
++
++
++  /**
++   * Pushes the specified amount of characters back into the input stream.
++   *
++   * They will be read again by then next call of the scanning method
++   *
++   * @param number  the number of characters to be read again.
++   *                This number must not be greater than yylength()!
++   */
++  public void yypushback(int number)  {
++    if ( number > yylength() )
++      zzScanError(ZZ_PUSHBACK_2BIG);
++
++    zzMarkedPos -= number;
++  }
++
++
++  /**
++   * Contains user EOF-code, which will be executed exactly once,
++   * when the end of file is reached
++   */
++  private void zzDoEOF() throws java.io.IOException {
++    if (!zzEOFDone) {
++      zzEOFDone = true;
++      yyclose();
++    }
++  }
++
++
++  /**
++   * Resumes scanning until the next regular expression is matched,
++   * the end of input is encountered or an I/O-Error occurs.
++   *
++   * @return      the next token
++   * @exception   java.io.IOException  if any I/O-Error occurs
++   */
++  public java_cup.runtime.Symbol next_token() throws java.io.IOException {
++    int zzInput;
++    int zzAction;
++
++    // cached fields:
++    int zzCurrentPosL;
++    int zzMarkedPosL;
++    int zzEndReadL = zzEndRead;
++    char [] zzBufferL = zzBuffer;
++    char [] zzCMapL = ZZ_CMAP;
++
++    int [] zzTransL = ZZ_TRANS;
++    int [] zzRowMapL = ZZ_ROWMAP;
++    int [] zzAttrL = ZZ_ATTRIBUTE;
++
++    while (true) {
++      zzMarkedPosL = zzMarkedPos;
++
++      boolean zzR = false;
++      for (zzCurrentPosL = zzStartRead; zzCurrentPosL < zzMarkedPosL;
++                                                             zzCurrentPosL++) {
++        switch (zzBufferL[zzCurrentPosL]) {
++        case '\u000B':
++        case '\u000C':
++        case '\u0085':
++        case '\u2028':
++        case '\u2029':
++          yyline++;
++          yycolumn = 0;
++          zzR = false;
++          break;
++        case '\r':
++          yyline++;
++          yycolumn = 0;
++          zzR = true;
++          break;
++        case '\n':
++          if (zzR)
++            zzR = false;
++          else {
++            yyline++;
++            yycolumn = 0;
++          }
++          break;
++        default:
++          zzR = false;
++          yycolumn++;
++        }
++      }
++
++      if (zzR) {
++        // peek one character ahead if it is \n (if we have counted one line too much)
++        boolean zzPeek;
++        if (zzMarkedPosL < zzEndReadL)
++          zzPeek = zzBufferL[zzMarkedPosL] == '\n';
++        else if (zzAtEOF)
++          zzPeek = false;
++        else {
++          boolean eof = zzRefill();
++          zzEndReadL = zzEndRead;
++          zzMarkedPosL = zzMarkedPos;
++          zzBufferL = zzBuffer;
++          if (eof) 
++            zzPeek = false;
++          else 
++            zzPeek = zzBufferL[zzMarkedPosL] == '\n';
++        }
++        if (zzPeek) yyline--;
++      }
++      zzAction = -1;
++
++      zzCurrentPosL = zzCurrentPos = zzStartRead = zzMarkedPosL;
++  
++      zzState = ZZ_LEXSTATE[zzLexicalState];
++
++      // set up zzAction for empty match case:
++      int zzAttributes = zzAttrL[zzState];
++      if ( (zzAttributes & 1) == 1 ) {
++        zzAction = zzState;
++      }
++
++
++      zzForAction: {
++        while (true) {
++    
++          if (zzCurrentPosL < zzEndReadL)
++            zzInput = zzBufferL[zzCurrentPosL++];
++          else if (zzAtEOF) {
++            zzInput = YYEOF;
++            break zzForAction;
++          }
++          else {
++            // store back cached positions
++            zzCurrentPos  = zzCurrentPosL;
++            zzMarkedPos   = zzMarkedPosL;
++            boolean eof = zzRefill();
++            // get translated positions and possibly new buffer
++            zzCurrentPosL  = zzCurrentPos;
++            zzMarkedPosL   = zzMarkedPos;
++            zzBufferL      = zzBuffer;
++            zzEndReadL     = zzEndRead;
++            if (eof) {
++              zzInput = YYEOF;
++              break zzForAction;
++            }
++            else {
++              zzInput = zzBufferL[zzCurrentPosL++];
++            }
++          }
++          int zzNext = zzTransL[ zzRowMapL[zzState] + zzCMapL[zzInput] ];
++          if (zzNext == -1) break zzForAction;
++          zzState = zzNext;
++
++          zzAttributes = zzAttrL[zzState];
++          if ( (zzAttributes & 1) == 1 ) {
++            zzAction = zzState;
++            zzMarkedPosL = zzCurrentPosL;
++            if ( (zzAttributes & 8) == 8 ) break zzForAction;
++          }
++
++        }
++      }
++
++      // store back cached position
++      zzMarkedPos = zzMarkedPosL;
++
++      switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
++        case 1: 
++          { throw new Error("Illegal character <"+yytext()+">");
++          }
++        case 11: break;
++        case 2: 
++          { /* do nothing */
++          }
++        case 12: break;
++        case 3: 
++          { return symbol(sym.NUMBER, new Integer(yytext()));
++          }
++        case 13: break;
++        case 4: 
++          { return symbol(sym.SEMI);
++          }
++        case 14: break;
++        case 5: 
++          { return symbol(sym.PLUS);
++          }
++        case 15: break;
++        case 6: 
++          { return symbol(sym.MINUS);
++          }
++        case 16: break;
++        case 7: 
++          { return symbol(sym.TIMES);
++          }
++        case 17: break;
++        case 8: 
++          { return symbol(sym.DIVIDE);
++          }
++        case 18: break;
++        case 9: 
++          { return symbol(sym.LPAREN);
++          }
++        case 19: break;
++        case 10: 
++          { return symbol(sym.RPAREN);
++          }
++        case 20: break;
++        default: 
++          if (zzInput == YYEOF && zzStartRead == zzCurrentPos) {
++            zzAtEOF = true;
++            zzDoEOF();
++              { return new java_cup.runtime.Symbol(sym.EOF); }
++          } 
++          else {
++            zzScanError(ZZ_NO_MATCH);
++          }
++      }
++    }
++  }
++
++
++}
+Index: src/parser.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/parser.java	(date 1589001566400)
++++ src/parser.java	(date 1589001566400)
+@@ -0,0 +1,349 @@
++
++//----------------------------------------------------
++// The following code was generated by CUP v0.11a beta 20060608
++// Sat May 09 00:19:26 CDT 2020
++//----------------------------------------------------
++
++import java_cup.runtime.*;
++
++/** CUP v0.11a beta 20060608 generated parser.
++  * @version Sat May 09 00:19:26 CDT 2020
++  */
++public class parser extends java_cup.runtime.lr_parser {
++
++  /** Default constructor. */
++  public parser() {super();}
++
++  /** Constructor which sets the default scanner. */
++  public parser(java_cup.runtime.Scanner s) {super(s);}
++
++  /** Constructor which sets the default scanner. */
++  public parser(java_cup.runtime.Scanner s, java_cup.runtime.SymbolFactory sf) {super(s,sf);}
++
++  /** Production table. */
++  protected static final short _production_table[][] = 
++    unpackFromStrings(new String[] {
++    "\000\015\000\002\002\004\000\002\002\004\000\002\002" +
++    "\003\000\002\007\002\000\002\003\005\000\002\004\005" +
++    "\000\002\004\005\000\002\004\003\000\002\005\005\000" +
++    "\002\005\005\000\002\005\003\000\002\006\005\000\002" +
++    "\006\003" });
++
++  /** Access to production table. */
++  public short[][] production_table() {return _production_table;}
++
++  /** Parse-action table. */
++  protected static final short[][] _action_table = 
++    unpackFromStrings(new String[] {
++    "\000\026\000\006\011\012\013\007\001\002\000\016\004" +
++    "\ufff7\005\ufff7\006\ufff7\007\ufff7\010\ufff7\012\ufff7\001\002" +
++    "\000\010\002\uffff\011\uffff\013\uffff\001\002\000\016\004" +
++    "\ufffa\005\ufffa\006\ufffa\007\021\010\020\012\ufffa\001\002" +
++    "\000\016\004\ufff5\005\ufff5\006\ufff5\007\ufff5\010\ufff5\012" +
++    "\ufff5\001\002\000\010\002\030\011\012\013\007\001\002" +
++    "\000\010\004\ufffe\005\015\006\016\001\002\000\006\011" +
++    "\012\013\007\001\002\000\010\005\015\006\016\012\014" +
++    "\001\002\000\016\004\ufff6\005\ufff6\006\ufff6\007\ufff6\010" +
++    "\ufff6\012\ufff6\001\002\000\006\011\012\013\007\001\002" +
++    "\000\006\011\012\013\007\001\002\000\016\004\ufffb\005" +
++    "\ufffb\006\ufffb\007\021\010\020\012\ufffb\001\002\000\006" +
++    "\011\012\013\007\001\002\000\006\011\012\013\007\001" +
++    "\002\000\016\004\ufff9\005\ufff9\006\ufff9\007\ufff9\010\ufff9" +
++    "\012\ufff9\001\002\000\016\004\ufff8\005\ufff8\006\ufff8\007" +
++    "\ufff8\010\ufff8\012\ufff8\001\002\000\016\004\ufffc\005\ufffc" +
++    "\006\ufffc\007\021\010\020\012\ufffc\001\002\000\004\004" +
++    "\026\001\002\000\010\002\ufffd\011\ufffd\013\ufffd\001\002" +
++    "\000\010\002\001\011\001\013\001\001\002\000\004\002" +
++    "\000\001\002" });
++
++  /** Access to parse-action table. */
++  public short[][] action_table() {return _action_table;}
++
++  /** <code>reduce_goto</code> table. */
++  protected static final short[][] _reduce_table = 
++    unpackFromStrings(new String[] {
++    "\000\026\000\014\002\007\003\004\004\010\005\005\006" +
++    "\003\001\001\000\002\001\001\000\002\001\001\000\002" +
++    "\001\001\000\002\001\001\000\012\003\026\004\010\005" +
++    "\005\006\003\001\001\000\004\007\024\001\001\000\010" +
++    "\004\012\005\005\006\003\001\001\000\002\001\001\000" +
++    "\002\001\001\000\006\005\023\006\003\001\001\000\006" +
++    "\005\016\006\003\001\001\000\002\001\001\000\004\006" +
++    "\022\001\001\000\004\006\021\001\001\000\002\001\001" +
++    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
++    "\002\001\001\000\002\001\001\000\002\001\001" });
++
++  /** Access to <code>reduce_goto</code> table. */
++  public short[][] reduce_table() {return _reduce_table;}
++
++  /** Instance of action encapsulation class. */
++  protected CUP$parser$actions action_obj;
++
++  /** Action encapsulation object initializer. */
++  protected void init_actions()
++    {
++      action_obj = new CUP$parser$actions(this);
++    }
++
++  /** Invoke a user supplied parse action. */
++  public java_cup.runtime.Symbol do_action(
++    int                        act_num,
++    java_cup.runtime.lr_parser parser,
++    java.util.Stack            stack,
++    int                        top)
++    throws java.lang.Exception
++  {
++    /* call code in generated class */
++    return action_obj.CUP$parser$do_action(act_num, parser, stack, top);
++  }
++
++  /** Indicates start state. */
++  public int start_state() {return 0;}
++  /** Indicates start production. */
++  public int start_production() {return 1;}
++
++  /** <code>EOF</code> Symbol index. */
++  public int EOF_sym() {return 0;}
++
++  /** <code>error</code> Symbol index. */
++  public int error_sym() {return 1;}
++
++
++
++
++   
++    
++    
++    public void report_error(String message, Object info) {
++   
++        StringBuilder m = new StringBuilder("Error");
++   
++         if (info instanceof java_cup.runtime.Symbol) {
++            
++            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
++   
++             if (s.left >= 0) {                
++                  m.append(" in line "+(s.left+1));   
++               	 
++               	  if (s.right >= 0)                    
++                 	 m.append(", column "+(s.right+1));
++            }
++        }
++   
++        m.append(" : "+message);
++   
++        System.err.println(m);
++    }
++   
++    
++    public void report_fatal_error(String message, Object info) {
++        report_error(message, info);
++        System.exit(1);
++    }
++
++}
++
++/** Cup generated class to encapsulate user supplied action code.*/
++class CUP$parser$actions {
++
++
++
++ public String x = "" ; 
++ 
++
++  private final parser parser;
++
++  /** Constructor */
++  CUP$parser$actions(parser parser) {
++    this.parser = parser;
++  }
++
++  /** Method with the actual generated action code. */
++  public final java_cup.runtime.Symbol CUP$parser$do_action(
++    int                        CUP$parser$act_num,
++    java_cup.runtime.lr_parser CUP$parser$parser,
++    java.util.Stack            CUP$parser$stack,
++    int                        CUP$parser$top)
++    throws java.lang.Exception
++    {
++      /* Symbol object for return from actions */
++      java_cup.runtime.Symbol CUP$parser$result;
++
++      /* select the action based on the action number */
++      switch (CUP$parser$act_num)
++        {
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 12: // term ::= NUMBER 
++            {
++              Integer RESULT =null;
++		int nleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int nright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 x+= n+" "; RESULT = n; 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("term",4, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 11: // term ::= LPAREN expr RPAREN 
++            {
++              Integer RESULT =null;
++		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
++		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
++		Integer e = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
++		 RESULT = e;  
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("term",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 10: // factor ::= term 
++            {
++              Integer RESULT =null;
++		int tleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int tright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer t = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 RESULT = new Integer(t.intValue()); 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("factor",3, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 9: // factor ::= factor DIVIDE term 
++            {
++              Integer RESULT =null;
++		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
++		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
++		Integer f = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
++		int tleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int tright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer t = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 x+= "/ "; RESULT = new Integer(f.intValue() / t.intValue()); 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("factor",3, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 8: // factor ::= factor TIMES term 
++            {
++              Integer RESULT =null;
++		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
++		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
++		Integer f = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
++		int tleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int tright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer t = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 x+= "* "; RESULT = new Integer(f.intValue() * t.intValue()); 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("factor",3, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 7: // expr ::= factor 
++            {
++              Integer RESULT =null;
++		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer f = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 RESULT = new Integer(f.intValue()); 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr",2, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 6: // expr ::= expr MINUS factor 
++            {
++              Integer RESULT =null;
++		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
++		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
++		Integer e = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
++		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer f = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		  x+= "- ";RESULT = new Integer(e.intValue() - f.intValue()); 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr",2, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 5: // expr ::= expr PLUS factor 
++            {
++              Integer RESULT =null;
++		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
++		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
++		Integer e = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
++		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer f = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++		 x+= "+ ";RESULT = new Integer(e.intValue() + f.intValue());
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr",2, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 4: // expr_part ::= expr NT$0 SEMI 
++            {
++              Object RESULT =null;
++              // propagate RESULT from NT$0
++                RESULT = (Object) ((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
++		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
++		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
++		Integer e = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
++
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr_part",1, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 3: // NT$0 ::= 
++            {
++              Object RESULT =null;
++		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
++		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
++		Integer e = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
++   System.out.println(x +" = " + e); x=""; 
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$0",5, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 2: // expr_list ::= expr_part 
++            {
++              Object RESULT =null;
++
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr_list",0, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 1: // $START ::= expr_list EOF 
++            {
++              Object RESULT =null;
++		int start_valleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
++		int start_valright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
++		Object start_val = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
++		RESULT = start_val;
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("$START",0, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          /* ACCEPT */
++          CUP$parser$parser.done_parsing();
++          return CUP$parser$result;
++
++          /*. . . . . . . . . . . . . . . . . . . .*/
++          case 0: // expr_list ::= expr_list expr_part 
++            {
++              Object RESULT =null;
++
++              CUP$parser$result = parser.getSymbolFactory().newSymbol("expr_list",0, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
++            }
++          return CUP$parser$result;
++
++          /* . . . . . .*/
++          default:
++            throw new Exception(
++               "Invalid action number found in internal parse table");
++
++        }
++    }
++}
++
+Index: src/sym.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/sym.java	(date 1589001566406)
++++ src/sym.java	(date 1589001566406)
+@@ -0,0 +1,21 @@
++
++//----------------------------------------------------
++// The following code was generated by CUP v0.11a beta 20060608
++// Sat May 09 00:19:26 CDT 2020
++//----------------------------------------------------
++
++/** CUP generated class containing symbol constants. */
++public class sym {
++  /* terminals */
++  public static final int MINUS = 4;
++  public static final int DIVIDE = 6;
++  public static final int NUMBER = 9;
++  public static final int SEMI = 2;
++  public static final int EOF = 0;
++  public static final int PLUS = 3;
++  public static final int error = 1;
++  public static final int RPAREN = 8;
++  public static final int TIMES = 5;
++  public static final int LPAREN = 7;
++}
++
